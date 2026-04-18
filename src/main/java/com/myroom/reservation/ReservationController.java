@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.myroom.auth.AuthPrincipal;
 import com.myroom.reservation.dto.ReservationRequest;
 import com.myroom.reservation.dto.ReservationResponse;
 
@@ -40,30 +42,45 @@ public class ReservationController {
                 .toList();
     }
 
+    @GetMapping("/me")
+    public List<ReservationResponse> listMine(@AuthenticationPrincipal AuthPrincipal principal) {
+        return reservationService.findMine(principal.id()).stream()
+                .map(ReservationResponse::from)
+                .toList();
+    }
+
     @GetMapping("/{id}")
-    public ReservationResponse get(@PathVariable Long id) {
-        return ReservationResponse.from(reservationService.findById(id));
+    public ReservationResponse get(@PathVariable Long id,
+                                    @AuthenticationPrincipal AuthPrincipal principal) {
+        return ReservationResponse.from(reservationService.findAccessible(id, principal));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ReservationResponse create(@Valid @RequestBody ReservationRequest request) {
-        return ReservationResponse.from(reservationService.create(request));
+    public ReservationResponse create(@Valid @RequestBody ReservationRequest request,
+                                       @AuthenticationPrincipal AuthPrincipal principal) {
+        return ReservationResponse.from(reservationService.create(request, principal));
     }
 
     @PutMapping("/{id}")
-    public ReservationResponse update(@PathVariable Long id, @Valid @RequestBody ReservationRequest request) {
-        return ReservationResponse.from(reservationService.update(id, request));
+    public ReservationResponse update(@PathVariable Long id,
+                                       @Valid @RequestBody ReservationRequest request,
+                                       @AuthenticationPrincipal AuthPrincipal principal) {
+        return ReservationResponse.from(reservationService.update(id, request, principal));
     }
 
     @PostMapping("/{id}/confirm")
-    public ReservationResponse confirm(@PathVariable Long id) {
-        return ReservationResponse.from(reservationService.changeStatus(id, ReservationStatus.CONFIRMED));
+    public ReservationResponse confirm(@PathVariable Long id,
+                                        @AuthenticationPrincipal AuthPrincipal principal) {
+        return ReservationResponse.from(
+                reservationService.changeStatus(id, ReservationStatus.CONFIRMED, principal));
     }
 
     @PostMapping("/{id}/cancel")
-    public ReservationResponse cancel(@PathVariable Long id) {
-        return ReservationResponse.from(reservationService.changeStatus(id, ReservationStatus.CANCELLED));
+    public ReservationResponse cancel(@PathVariable Long id,
+                                       @AuthenticationPrincipal AuthPrincipal principal) {
+        return ReservationResponse.from(
+                reservationService.changeStatus(id, ReservationStatus.CANCELLED, principal));
     }
 
     @DeleteMapping("/{id}")

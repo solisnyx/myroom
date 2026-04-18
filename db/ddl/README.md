@@ -6,8 +6,9 @@ Canonical DDL scripts for the `myroom` izakaya reservation schema.
 
 | File | Purpose |
 |------|---------|
-| `V1__create_tables.sql` | `room`, `menu`, `reservation` tables + indexes + check constraints |
-| `V2__seed_data.sql`     | Sample rooms and izakaya menu (drinks / food) |
+| `V1__create_tables.sql`             | `room`, `menu`, `reservation` tables + indexes + check constraints |
+| `V2__seed_data.sql`                 | Sample rooms and izakaya menu (drinks / food) |
+| `V3__add_user_and_reservation_fk.sql` | `app_user` table + `reservation.user_id` nullable FK for authenticated bookings |
 
 ## Compatibility
 

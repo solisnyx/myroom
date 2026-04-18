@@ -7,11 +7,16 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.myroom.auth.AuthPrincipal;
 import com.myroom.common.BadRequestException;
+import com.myroom.common.ForbiddenException;
 import com.myroom.common.NotFoundException;
 import com.myroom.reservation.dto.ReservationRequest;
 import com.myroom.room.Room;
 import com.myroom.room.RoomRepository;
+import com.myroom.user.User;
+import com.myroom.user.UserRepository;
+import com.myroom.user.UserRole;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +27,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
 
     public List<Reservation> findAll(ReservationStatus status, LocalDateTime from, LocalDateTime to) {
         if (status != null) {
@@ -33,14 +39,26 @@ public class ReservationService {
         return reservationRepository.findAll();
     }
 
+    public List<Reservation> findMine(Long userId) {
+        return reservationRepository.findByUserIdOrderByReservedAtDesc(userId);
+    }
+
     public Reservation findById(Long id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("reservation.notFound", id));
     }
 
+    public Reservation findAccessible(Long id, AuthPrincipal principal) {
+        Reservation r = findById(id);
+        authorize(r, principal);
+        return r;
+    }
+
     @Transactional
-    public Reservation create(ReservationRequest request) {
+    public Reservation create(ReservationRequest request, AuthPrincipal principal) {
         Room room = resolveRoom(request.getRoomId(), request.getPartySize());
+        User user = principal == null ? null : userRepository.findById(principal.id())
+                .orElseThrow(() -> new NotFoundException("user.notFound", principal.id()));
 
         Reservation reservation = Reservation.builder()
                 .customerName(request.getCustomerName())
@@ -52,13 +70,15 @@ public class ReservationService {
                 .status(ReservationStatus.PENDING)
                 .preferredLanguage(resolveLanguage(request.getPreferredLanguage()))
                 .room(room)
+                .user(user)
                 .build();
         return reservationRepository.save(reservation);
     }
 
     @Transactional
-    public Reservation update(Long id, ReservationRequest request) {
+    public Reservation update(Long id, ReservationRequest request, AuthPrincipal principal) {
         Reservation r = findById(id);
+        authorize(r, principal);
         if (r.getStatus() == ReservationStatus.CANCELLED) {
             throw new BadRequestException("reservation.cancelled.notModifiable");
         }
@@ -75,8 +95,12 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation changeStatus(Long id, ReservationStatus newStatus) {
+    public Reservation changeStatus(Long id, ReservationStatus newStatus, AuthPrincipal principal) {
         Reservation r = findById(id);
+        if (newStatus == ReservationStatus.CONFIRMED && !isAdmin(principal)) {
+            throw new ForbiddenException("error.forbidden");
+        }
+        authorize(r, principal);
         if (r.getStatus() == ReservationStatus.CANCELLED) {
             throw new BadRequestException("reservation.cancelled.notModifiable");
         }
@@ -90,6 +114,20 @@ public class ReservationService {
             throw new NotFoundException("reservation.notFound", id);
         }
         reservationRepository.deleteById(id);
+    }
+
+    private void authorize(Reservation r, AuthPrincipal principal) {
+        if (isAdmin(principal)) {
+            return;
+        }
+        if (principal == null || r.getUser() == null
+                || !principal.id().equals(r.getUser().getId())) {
+            throw new ForbiddenException("error.forbidden");
+        }
+    }
+
+    private boolean isAdmin(AuthPrincipal principal) {
+        return principal != null && principal.role() == UserRole.ADMIN;
     }
 
     private Room resolveRoom(Long roomId, Integer partySize) {

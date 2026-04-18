@@ -33,6 +33,17 @@ public class ApiExceptionHandler {
                 .build());
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(ForbiddenException ex) {
+        String message = messageSource.getMessage(ex.getMessageKey(), ex.getArgs(),
+                LocaleContextHolder.getLocale());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiError.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build());
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex) {
         String message = messageSource.getMessage(ex.getMessageKey(), ex.getArgs(),

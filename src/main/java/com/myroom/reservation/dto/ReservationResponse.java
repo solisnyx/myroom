@@ -29,6 +29,7 @@ public class ReservationResponse {
     private PreferredLanguage preferredLanguage;
     private Long roomId;
     private String roomName;
+    private Long userId;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -49,6 +50,7 @@ public class ReservationResponse {
                 .preferredLanguage(r.getPreferredLanguage())
                 .roomId(r.getRoom() == null ? null : r.getRoom().getId())
                 .roomName(r.getRoom() == null ? null : r.getRoom().getName())
+                .userId(r.getUser() == null ? null : r.getUser().getId())
                 .createdAt(r.getCreatedAt())
                 .updatedAt(r.getUpdatedAt())
                 .build();
