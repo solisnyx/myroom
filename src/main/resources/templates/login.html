@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{login.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(null)}"></nav>
+
+<main class="container">
+    <section class="card" style="max-width: 420px; margin: 32px auto;">
+        <h1 th:text="#{login.title}">Login</h1>
+        <p class="muted" th:text="#{login.description}">Login with Kakao</p>
+        <p>
+            <a class="btn" th:href="@{/oauth2/authorization/kakao}"
+               style="background:#FEE500;color:#3B1E1E !important;" th:text="#{login.kakao}">
+                Sign in with Kakao
+            </a>
+        </p>
+        <p class="small muted" th:text="#{login.note}">
+            A new account is created on first login.
+        </p>
+    </section>
+</main>
+</body>
+</html>

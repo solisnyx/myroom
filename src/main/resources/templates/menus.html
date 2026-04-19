@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{menus.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <div class="row">
+        <h1 th:text="#{menus.title}">Menu</h1>
+        <div class="spacer"></div>
+        <form method="get" th:action="@{/menus}" class="row">
+            <label for="category" style="margin:0 6px 0 0;" th:text="#{menus.category}">Category</label>
+            <select id="category" name="category" onchange="this.form.submit()" style="width:auto;">
+                <option value="" th:selected="${category == null}" th:text="#{menus.all}">All</option>
+                <option th:each="c : ${categories}" th:value="${c}"
+                        th:text="#{'menu.category.' + ${c.name()}}" th:selected="${category == c}">DRINK</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="grid">
+        <div class="card" th:each="m : ${menus}">
+            <h3 th:text="${m.nameJa}">Menu</h3>
+            <p class="muted small" th:text="${m.nameKo}">name ko</p>
+            <p class="small" th:text="${m.descriptionJa}">description</p>
+            <p class="row">
+                <span class="badge" th:text="#{'menu.category.' + ${m.category.name()}}">DRINK</span>
+                <span class="spacer"></span>
+                <strong th:text="'¥' + ${m.price}">¥0</strong>
+            </p>
+        </div>
+        <p th:if="${#lists.isEmpty(menus)}" class="muted" th:text="#{menus.empty}">No items</p>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+</body>
+</html>

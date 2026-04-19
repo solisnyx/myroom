@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{rooms.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{rooms.title}">Rooms</h1>
+    <div class="grid">
+        <div class="card" th:each="room : ${rooms}">
+            <h3 th:text="${room.name}">Room</h3>
+            <p class="muted small" th:text="${room.description}">desc</p>
+            <p class="small">
+                <span th:text="#{rooms.capacity}">Capacity</span>:
+                <strong th:text="${room.capacity}">4</strong>
+            </p>
+            <p><a class="btn btn-sm" th:href="@{/reservations/new(roomId=${room.id})}"
+                  th:text="#{rooms.reserve}">Reserve</a></p>
+        </div>
+        <p th:if="${#lists.isEmpty(rooms)}" class="muted" th:text="#{rooms.empty}">No rooms</p>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+</body>
+</html>

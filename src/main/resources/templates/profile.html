@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{profile.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{profile.title}">Profile</h1>
+    <div class="card">
+        <div class="row">
+            <img th:if="${user.profileImageUrl}" th:src="${user.profileImageUrl}"
+                 alt="avatar" width="48" height="48" style="border-radius:999px;"/>
+            <div>
+                <div th:text="${user.email} ?: '-'">email</div>
+                <div>
+                    <span th:class="'badge badge-' + ${user.role}" th:text="${user.role}">USER</span>
+                    <span class="badge" th:text="${user.provider}">KAKAO</span>
+                </div>
+            </div>
+        </div>
+        <hr/>
+        <form id="profile-form" onsubmit="return false;">
+            <div class="form-row">
+                <label for="nickname" th:text="#{profile.nickname}">Nickname</label>
+                <input id="nickname" name="nickname" maxlength="80" th:value="${user.nickname}"/>
+            </div>
+            <div class="form-row">
+                <label for="phone" th:text="#{profile.phone}">Phone</label>
+                <input id="phone" name="phone" maxlength="30" th:value="${user.phone}"/>
+            </div>
+            <div class="form-actions">
+                <button class="btn" id="save-btn" th:text="#{action.save}">Save</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script>
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        const form = document.getElementById('profile-form');
+        try {
+            await api.put('/api/users/me', {
+                nickname: form.nickname.value,
+                phone: form.phone.value
+            });
+            api.flash('Saved', 'success');
+        } catch (e) {
+            api.flash(e.message, 'error');
+        }
+    });
+</script>
+</body>
+</html>

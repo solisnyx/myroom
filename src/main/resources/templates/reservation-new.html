@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{reservation.new.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{reservation.new.title}">New reservation</h1>
+    <form id="resv-form" class="card" onsubmit="return false;">
+        <div class="form-row">
+            <label for="customerName" th:text="#{reservation.customerName}">Name</label>
+            <input id="customerName" name="customerName" required maxlength="100"
+                   th:value="${principal != null ? principal.nickname() : ''}"/>
+        </div>
+        <div class="form-row">
+            <label for="phone" th:text="#{reservation.phone}">Phone</label>
+            <input id="phone" name="phone" required maxlength="30"/>
+        </div>
+        <div class="form-row">
+            <label for="email" th:text="#{reservation.email}">Email</label>
+            <input id="email" name="email" type="email" maxlength="150"
+                   th:value="${principal != null ? principal.email() : ''}"/>
+        </div>
+        <div class="row">
+            <div class="form-row" style="flex:1;">
+                <label for="partySize" th:text="#{reservation.partySize}">Party size</label>
+                <input id="partySize" name="partySize" type="number" min="1" value="2" required/>
+            </div>
+            <div class="form-row" style="flex:2;">
+                <label for="reservedAt" th:text="#{reservation.reservedAt}">Date / time</label>
+                <input id="reservedAt" name="reservedAt" type="datetime-local" required/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-row" style="flex:1;">
+                <label for="roomId" th:text="#{reservation.room}">Room</label>
+                <select id="roomId" name="roomId">
+                    <option value="" th:text="#{reservation.room.any}">Any</option>
+                    <option th:each="r : ${rooms}" th:value="${r.id}"
+                            th:text="${r.name} + ' (' + ${r.capacity} + ')'">Room</option>
+                </select>
+            </div>
+            <div class="form-row" style="flex:1;">
+                <label for="preferredLanguage" th:text="#{reservation.language}">Language</label>
+                <select id="preferredLanguage" name="preferredLanguage">
+                    <option value="JA">日本語</option>
+                    <option value="KO">한국어</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <label for="notes" th:text="#{reservation.notes}">Notes</label>
+            <textarea id="notes" name="notes" maxlength="1000"></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn" id="submit-btn" th:text="#{action.submit}">Submit</button>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script th:inline="javascript">
+    const preselectRoomId = /*[[${param.roomId}]]*/ null;
+    if (preselectRoomId) {
+        const sel = document.getElementById('roomId');
+        if (sel) sel.value = preselectRoomId;
+    }
+    document.getElementById('submit-btn').addEventListener('click', async () => {
+        const form = document.getElementById('resv-form');
+        const body = {
+            customerName: form.customerName.value,
+            phone: form.phone.value,
+            email: form.email.value || null,
+            partySize: Number(form.partySize.value),
+            reservedAt: form.reservedAt.value ? form.reservedAt.value + ':00' : null,
+            notes: form.notes.value || null,
+            preferredLanguage: form.preferredLanguage.value || null,
+            roomId: form.roomId.value ? Number(form.roomId.value) : null
+        };
+        try {
+            const res = await api.post('/api/reservations', body);
+            api.flash('OK #' + res.id, 'success');
+            setTimeout(() => { location.href = '/reservations/' + res.id; }, 600);
+        } catch (e) {
+            api.flash(e.message, 'error');
+        }
+    });
+</script>
+</body>
+</html>

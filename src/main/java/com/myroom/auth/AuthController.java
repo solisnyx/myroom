@@ -1,20 +1,38 @@
 package com.myroom.auth;
 
-import java.util.Map;
-
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/oauth2")
+@RequestMapping("/auth")
 public class AuthController {
 
-    @GetMapping("/success")
-    public Map<String, String> success(@RequestParam String token) {
-        return Map.of(
-                "tokenType", "Bearer",
-                "accessToken", token);
+    @PostMapping("/logout")
+    public RedirectView logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie cookie = new Cookie(JwtAuthenticationFilter.AUTH_COOKIE, "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setSecure(request.isSecure());
+        response.addCookie(cookie);
+        return new RedirectView("/");
+    }
+
+    @PostMapping("/logout.json")
+    public ResponseEntity<Void> logoutJson(HttpServletRequest request, HttpServletResponse response) {
+        Cookie cookie = new Cookie(JwtAuthenticationFilter.AUTH_COOKIE, "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setSecure(request.isSecure());
+        response.addCookie(cookie);
+        return ResponseEntity.noContent().build();
     }
 }

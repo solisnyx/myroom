@@ -1,6 +1,5 @@
 package com.myroom.config;
 
-import java.util.List;
 import java.util.Locale;
 
 import org.springframework.context.MessageSource;
@@ -11,20 +10,19 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 @Configuration
 public class LocaleConfig implements WebMvcConfigurer {
 
     private static final Locale JAPANESE = Locale.JAPANESE;
-    private static final Locale KOREAN = Locale.KOREAN;
 
     @Bean
     public LocaleResolver localeResolver() {
-        AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
+        CookieLocaleResolver resolver = new CookieLocaleResolver("LOCALE");
         resolver.setDefaultLocale(JAPANESE);
-        resolver.setSupportedLocales(List.of(JAPANESE, KOREAN));
+        resolver.setCookiePath("/");
         return resolver;
     }
 

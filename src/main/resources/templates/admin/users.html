@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.users})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{admin.users}">Users</h1>
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th th:text="#{profile.nickname}">Nickname</th>
+                <th th:text="#{profile.email}">Email</th>
+                <th th:text="#{profile.phone}">Phone</th>
+                <th th:text="#{profile.role}">Role</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${users}" th:attr="data-id=${u.id}">
+                <td th:text="${u.id}">1</td>
+                <td th:text="${u.nickname}">nick</td>
+                <td th:text="${u.email} ?: '-'">email</td>
+                <td th:text="${u.phone} ?: '-'">phone</td>
+                <td>
+                    <select th:attr="data-id=${u.id}" onchange="changeRole(this)">
+                        <option th:each="role : ${roles}" th:value="${role}"
+                                th:selected="${u.role == role}" th:text="${role}">USER</option>
+                    </select>
+                </td>
+                <td class="right">
+                    <button class="btn btn-sm btn-danger" th:attr="data-id=${u.id}"
+                            onclick="deleteUser(this)" th:text="#{action.delete}">Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script>
+    async function changeRole(sel) {
+        try {
+            await api.put('/api/admin/users/' + sel.dataset.id + '/role', { role: sel.value });
+            api.flash('Saved', 'success');
+        } catch (e) { api.flash(e.message, 'error'); }
+    }
+    async function deleteUser(btn) {
+        if (!confirm('Delete?')) return;
+        try {
+            await api.del('/api/admin/users/' + btn.dataset.id);
+            btn.closest('tr').remove();
+        } catch (e) { api.flash(e.message, 'error'); }
+    }
+</script>
+</body>
+</html>

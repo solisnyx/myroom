@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.rooms})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1>
+        <span th:text="${room != null ? #messages.msg('action.edit') : #messages.msg('action.new')}">New</span>
+        <span class="muted"> — </span>
+        <span th:text="#{admin.rooms}">Rooms</span>
+    </h1>
+    <form id="room-form" class="card" onsubmit="return false;">
+        <div class="form-row">
+            <label for="name" th:text="#{room.name}">Name</label>
+            <input id="name" maxlength="100" required th:value="${room != null ? room.name : ''}"/>
+        </div>
+        <div class="form-row">
+            <label for="description" th:text="#{room.description}">Description</label>
+            <textarea id="description" maxlength="500"
+                      th:text="${room != null ? room.description : ''}"></textarea>
+        </div>
+        <div class="form-row">
+            <label for="capacity" th:text="#{rooms.capacity}">Capacity</label>
+            <input id="capacity" type="number" min="1" required
+                   th:value="${room != null ? room.capacity : 2}"/>
+        </div>
+        <div class="form-actions">
+            <button class="btn" id="save-btn" th:text="#{action.save}">Save</button>
+            <a class="btn btn-secondary" th:href="@{/admin/rooms}" th:text="#{action.back}">Back</a>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script th:inline="javascript">
+    const roomId = /*[[${room != null ? room.id : null}]]*/ null;
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        const body = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value || null,
+            capacity: Number(document.getElementById('capacity').value)
+        };
+        try {
+            if (roomId) await api.put('/api/rooms/' + roomId, body);
+            else await api.post('/api/rooms', body);
+            location.href = '/admin/rooms';
+        } catch (e) { api.flash(e.message, 'error'); }
+    });
+</script>
+</body>
+</html>

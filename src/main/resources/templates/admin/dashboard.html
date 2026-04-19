@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{admin.title}">Admin</h1>
+    <div class="grid">
+        <a class="card" th:href="@{/admin/menus}"><h3 th:text="#{admin.menus}">Menus</h3></a>
+        <a class="card" th:href="@{/admin/rooms}"><h3 th:text="#{admin.rooms}">Rooms</h3></a>
+        <a class="card" th:href="@{/admin/reservations}"><h3 th:text="#{admin.reservations}">Reservations</h3></a>
+        <a class="card" th:href="@{/admin/users}"><h3 th:text="#{admin.users}">Users</h3></a>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+</body>
+</html>

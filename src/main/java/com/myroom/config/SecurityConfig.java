@@ -5,13 +5,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.myroom.auth.CustomOAuth2UserService;
@@ -19,6 +20,8 @@ import com.myroom.auth.JwtAuthenticationFilter;
 import com.myroom.auth.JwtProperties;
 import com.myroom.auth.OAuth2SuccessHandler;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -39,13 +42,17 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex ->
-                        ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(htmlAwareEntryPoint()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**", "/oauth2/**",
-                                "/login/oauth2/**", "/error").permitAll()
+                        .requestMatchers("/", "/login", "/menus", "/rooms",
+                                "/reservations/new", "/oauth2/**",
+                                "/login/oauth2/**", "/error",
+                                "/h2-console/**",
+                                "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                                "/auth/logout", "/auth/logout.json").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menus/**", "/api/rooms/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/reservations").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/reservations").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/reservations/**").hasRole("ADMIN")
@@ -62,4 +69,20 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults());
         return http.build();
     }
+
+    private AuthenticationEntryPoint htmlAwareEntryPoint() {
+        return (HttpServletRequest request, HttpServletResponse response,
+                org.springframework.security.core.AuthenticationException ex) -> {
+            String accept = request.getHeader("Accept");
+            String uri = request.getRequestURI();
+            boolean wantsJson = uri.startsWith("/api/")
+                    || (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE));
+            if (wantsJson) {
+                response.sendError(HttpStatus.UNAUTHORIZED.value());
+            } else {
+                response.sendRedirect("/login");
+            }
+        };
+    }
+
 }

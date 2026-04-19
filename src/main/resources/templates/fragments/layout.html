@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title != null} ? ${title} + ' | myroom' : 'myroom'">myroom</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body>
+
+<nav th:fragment="nav(principal)" class="nav">
+    <div class="nav-inner">
+        <a class="brand" th:href="@{/}">myroom</a>
+        <ul class="nav-links">
+            <li><a th:href="@{/menus}" th:text="#{nav.menus}">Menu</a></li>
+            <li><a th:href="@{/rooms}" th:text="#{nav.rooms}">Rooms</a></li>
+            <li><a th:href="@{/reservations/new}" th:text="#{nav.reserve}">Reserve</a></li>
+            <li th:if="${principal != null}">
+                <a th:href="@{/reservations/me}" th:text="#{nav.myReservations}">My</a>
+            </li>
+            <li th:if="${principal != null}">
+                <a th:href="@{/me}" th:text="#{nav.profile}">Profile</a>
+            </li>
+            <li th:if="${principal != null and principal.role().name() == 'ADMIN'}">
+                <a th:href="@{/admin}" th:text="#{nav.admin}">Admin</a>
+            </li>
+        </ul>
+        <div class="nav-right">
+            <span class="lang">
+                <a th:href="@{'?lang=ja'}">JA</a> /
+                <a th:href="@{'?lang=ko'}">KO</a>
+            </span>
+            <span th:if="${principal == null}">
+                <a class="btn" th:href="@{/login}" th:text="#{nav.login}">Login</a>
+            </span>
+            <form th:if="${principal != null}" th:action="@{/auth/logout}" method="post" class="inline-form">
+                <span class="user" th:text="${principal.nickname()}">User</span>
+                <button type="submit" class="btn btn-ghost" th:text="#{nav.logout}">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div th:fragment="flash" class="flash" id="flash" hidden></div>
+
+<script th:fragment="apiscript">
+    window.api = (function () {
+        async function call(method, url, body) {
+            const opts = { method, credentials: 'same-origin', headers: {} };
+            if (body !== undefined) {
+                opts.headers['Content-Type'] = 'application/json';
+                opts.body = JSON.stringify(body);
+            }
+            const res = await fetch(url, opts);
+            if (res.status === 204) return null;
+            const text = await res.text();
+            const data = text ? JSON.parse(text) : null;
+            if (!res.ok) {
+                const msg = (data && data.message) || res.statusText;
+                throw new Error(msg);
+            }
+            return data;
+        }
+        function showFlash(message, kind) {
+            const el = document.getElementById('flash');
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'flash ' + (kind || 'info');
+            el.hidden = false;
+            setTimeout(() => { el.hidden = true; }, 4000);
+        }
+        return {
+            get: (u) => call('GET', u),
+            post: (u, b) => call('POST', u, b),
+            put: (u, b) => call('PUT', u, b),
+            del: (u) => call('DELETE', u),
+            flash: showFlash
+        };
+    })();
+</script>
+</body>
+</html>

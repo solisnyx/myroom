@@ -63,4 +63,4 @@ app:
     expiration-ms: 86400000
     issuer: myroom
   oauth:
-    success-redirect-url: ${OAUTH_SUCCESS_REDIRECT:/oauth2/success}
+    success-redirect-url: ${OAUTH_SUCCESS_REDIRECT:/}
