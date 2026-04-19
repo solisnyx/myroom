@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{reservation.detail.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1>
+        <span th:text="#{reservation.detail.title}">Reservation</span>
+        <span class="muted small">#<span th:text="${reservation.id}">0</span></span>
+    </h1>
+
+    <div class="card">
+        <div class="row">
+            <span th:class="'badge badge-' + ${reservation.status}"
+                  th:text="#{'reservation.status.' + ${reservation.status.name()}}">PENDING</span>
+            <span class="spacer"></span>
+            <span class="small muted"
+                  th:text="${#temporals.format(reservation.createdAt, 'yyyy-MM-dd HH:mm')}">created</span>
+        </div>
+        <dl>
+            <dt class="muted small" th:text="#{reservation.customerName}">Name</dt>
+            <dd th:text="${reservation.customerName}">name</dd>
+            <dt class="muted small" th:text="#{reservation.phone}">Phone</dt>
+            <dd th:text="${reservation.phone}">phone</dd>
+            <dt class="muted small" th:text="#{reservation.email}">Email</dt>
+            <dd th:text="${reservation.email} ?: '-'">email</dd>
+            <dt class="muted small" th:text="#{reservation.reservedAt}">When</dt>
+            <dd th:text="${#temporals.format(reservation.reservedAt, 'yyyy-MM-dd HH:mm')}">when</dd>
+            <dt class="muted small" th:text="#{reservation.partySize}">Party size</dt>
+            <dd th:text="${reservation.partySize}">2</dd>
+            <dt class="muted small" th:text="#{reservation.room}">Room</dt>
+            <dd th:text="${reservation.roomName} ?: '-'">room</dd>
+            <dt class="muted small" th:text="#{reservation.notes}">Notes</dt>
+            <dd th:text="${reservation.notes} ?: '-'">notes</dd>
+        </dl>
+        <div class="form-actions">
+            <button class="btn btn-danger" id="cancel-btn"
+                    th:if="${reservation.status.name() != 'CANCELLED'}"
+                    th:text="#{action.cancel}">Cancel</button>
+            <button class="btn" id="confirm-btn"
+                    th:if="${principal != null and principal.role().name() == 'ADMIN' and reservation.status.name() == 'PENDING'}"
+                    th:text="#{action.confirm}">Confirm</button>
+            <a class="btn btn-secondary" th:href="@{/reservations/me}"
+               th:if="${principal != null and principal.role().name() != 'ADMIN'}"
+               th:text="#{action.back}">Back</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script th:inline="javascript">
+    const id = /*[[${reservation.id}]]*/ 0;
+    const cancelBtn = document.getElementById('cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', async () => {
+        try { await api.post('/api/reservations/' + id + '/cancel'); location.reload(); }
+        catch (e) { api.flash(e.message, 'error'); }
+    });
+    const confirmBtn = document.getElementById('confirm-btn');
+    if (confirmBtn) confirmBtn.addEventListener('click', async () => {
+        try { await api.post('/api/reservations/' + id + '/confirm'); location.reload(); }
+        catch (e) { api.flash(e.message, 'error'); }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <section class="hero">
+        <h1 th:text="#{home.title}">myroom</h1>
+        <p th:text="#{home.tagline}">Private izakaya rooms & reservations</p>
+        <p>
+            <a class="btn" th:href="@{/reservations/new}" th:text="#{home.cta.reserve}">Reserve</a>
+            <a class="btn btn-secondary" th:href="@{/menus}" th:text="#{home.cta.menu}">Menu</a>
+        </p>
+    </section>
+
+    <section class="card">
+        <h2 th:text="#{rooms.title}">Rooms</h2>
+        <div class="grid">
+            <div class="card" th:each="room : ${rooms}">
+                <h3 th:text="${room.name}">Room</h3>
+                <p class="muted small" th:text="${room.description}">desc</p>
+                <p class="small">
+                    <span th:text="#{rooms.capacity}">Capacity</span>:
+                    <strong th:text="${room.capacity}">4</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+</body>
+</html>

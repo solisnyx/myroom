@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.reservations})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1 th:text="#{admin.reservations}">Reservations</h1>
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th th:text="#{reservation.customerName}">Name</th>
+                <th th:text="#{reservation.phone}">Phone</th>
+                <th th:text="#{reservation.reservedAt}">When</th>
+                <th th:text="#{reservation.partySize}">Party</th>
+                <th th:text="#{reservation.room}">Room</th>
+                <th th:text="#{reservation.status}">Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${reservations}" th:attr="data-id=${r.id}">
+                <td th:text="${r.id}">1</td>
+                <td th:text="${r.customerName}">name</td>
+                <td th:text="${r.phone}">phone</td>
+                <td th:text="${#temporals.format(r.reservedAt, 'yyyy-MM-dd HH:mm')}">when</td>
+                <td th:text="${r.partySize}">2</td>
+                <td th:text="${r.roomName} ?: '-'">room</td>
+                <td>
+                    <span th:class="'badge badge-' + ${r.status}"
+                          th:text="#{'reservation.status.' + ${r.status.name()}}">PENDING</span>
+                </td>
+                <td class="right">
+                    <button class="btn btn-sm" th:if="${r.status.name() == 'PENDING'}"
+                            th:attr="data-id=${r.id}" onclick="confirmR(this)"
+                            th:text="#{action.confirm}">Confirm</button>
+                    <button class="btn btn-sm btn-secondary" th:if="${r.status.name() != 'CANCELLED'}"
+                            th:attr="data-id=${r.id}" onclick="cancelR(this)"
+                            th:text="#{action.cancel}">Cancel</button>
+                    <button class="btn btn-sm btn-danger" th:attr="data-id=${r.id}"
+                            onclick="deleteR(this)" th:text="#{action.delete}">Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script>
+    async function confirmR(btn) {
+        try { await api.post('/api/reservations/' + btn.dataset.id + '/confirm'); location.reload(); }
+        catch (e) { api.flash(e.message, 'error'); }
+    }
+    async function cancelR(btn) {
+        try { await api.post('/api/reservations/' + btn.dataset.id + '/cancel'); location.reload(); }
+        catch (e) { api.flash(e.message, 'error'); }
+    }
+    async function deleteR(btn) {
+        if (!confirm('Delete?')) return;
+        try {
+            await api.del('/api/reservations/' + btn.dataset.id);
+            btn.closest('tr').remove();
+        } catch (e) { api.flash(e.message, 'error'); }
+    }
+</script>
+</body>
+</html>

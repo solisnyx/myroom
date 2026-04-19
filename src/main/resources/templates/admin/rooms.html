@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.rooms})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <div class="row">
+        <h1 th:text="#{admin.rooms}">Rooms</h1>
+        <div class="spacer"></div>
+        <a class="btn" th:href="@{/admin/rooms/new}" th:text="#{action.new}">New</a>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th th:text="#{room.name}">Name</th>
+                <th th:text="#{room.description}">Description</th>
+                <th th:text="#{rooms.capacity}">Capacity</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${rooms}">
+                <td th:text="${r.id}">1</td>
+                <td th:text="${r.name}">name</td>
+                <td th:text="${r.description}">desc</td>
+                <td th:text="${r.capacity}">4</td>
+                <td class="right">
+                    <a class="btn btn-sm btn-secondary" th:href="@{'/admin/rooms/' + ${r.id} + '/edit'}"
+                       th:text="#{action.edit}">Edit</a>
+                    <button class="btn btn-sm btn-danger" th:attr="data-id=${r.id}"
+                            onclick="deleteRoom(this)" th:text="#{action.delete}">Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script>
+    async function deleteRoom(btn) {
+        if (!confirm('Delete?')) return;
+        try {
+            await api.del('/api/rooms/' + btn.dataset.id);
+            btn.closest('tr').remove();
+        } catch (e) { api.flash(e.message, 'error'); }
+    }
+</script>
+</body>
+</html>

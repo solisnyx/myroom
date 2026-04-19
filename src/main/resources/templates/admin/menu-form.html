@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(#{admin.menus})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav(${principal})}"></nav>
+
+<main class="container">
+    <h1>
+        <span th:text="${menu != null ? #messages.msg('action.edit') : #messages.msg('action.new')}">New</span>
+        <span class="muted"> — </span>
+        <span th:text="#{admin.menus}">Menu</span>
+    </h1>
+    <form id="menu-form" class="card" onsubmit="return false;">
+        <div class="form-row">
+            <label for="nameJa" th:text="#{menu.nameJa}">Name (JA)</label>
+            <input id="nameJa" maxlength="200" required th:value="${menu != null ? menu.nameJa : ''}"/>
+        </div>
+        <div class="form-row">
+            <label for="nameKo" th:text="#{menu.nameKo}">Name (KO)</label>
+            <input id="nameKo" maxlength="200" th:value="${menu != null ? menu.nameKo : ''}"/>
+        </div>
+        <div class="row">
+            <div class="form-row" style="flex:1;">
+                <label for="category" th:text="#{menu.category}">Category</label>
+                <select id="category">
+                    <option th:each="c : ${categories}" th:value="${c}"
+                            th:selected="${menu != null and menu.category == c}"
+                            th:text="#{'menu.category.' + ${c.name()}}">DRINK</option>
+                </select>
+            </div>
+            <div class="form-row" style="flex:1;">
+                <label for="price" th:text="#{menu.price}">Price</label>
+                <input id="price" type="number" min="0" required th:value="${menu != null ? menu.price : 0}"/>
+            </div>
+        </div>
+        <div class="form-row">
+            <label for="descriptionJa" th:text="#{menu.descriptionJa}">Description (JA)</label>
+            <textarea id="descriptionJa" maxlength="500"
+                      th:text="${menu != null ? menu.descriptionJa : ''}"></textarea>
+        </div>
+        <div class="form-row">
+            <label for="descriptionKo" th:text="#{menu.descriptionKo}">Description (KO)</label>
+            <textarea id="descriptionKo" maxlength="500"
+                      th:text="${menu != null ? menu.descriptionKo : ''}"></textarea>
+        </div>
+        <div class="form-row">
+            <label><input type="checkbox" id="available" th:checked="${menu == null or menu.available}"
+                          style="width:auto;"/> <span th:text="#{menu.available}">Available</span></label>
+        </div>
+        <div class="form-actions">
+            <button class="btn" id="save-btn" th:text="#{action.save}">Save</button>
+            <a class="btn btn-secondary" th:href="@{/admin/menus}" th:text="#{action.back}">Back</a>
+        </div>
+    </form>
+</main>
+
+<div th:replace="~{fragments/layout :: flash}"></div>
+<script th:replace="~{fragments/layout :: apiscript}"></script>
+<script th:inline="javascript">
+    const menuId = /*[[${menu != null ? menu.id : null}]]*/ null;
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        const body = {
+            nameJa: document.getElementById('nameJa').value,
+            nameKo: document.getElementById('nameKo').value || null,
+            category: document.getElementById('category').value,
+            price: Number(document.getElementById('price').value),
+            descriptionJa: document.getElementById('descriptionJa').value || null,
+            descriptionKo: document.getElementById('descriptionKo').value || null,
+            available: document.getElementById('available').checked
+        };
+        try {
+            if (menuId) await api.put('/api/menus/' + menuId, body);
+            else await api.post('/api/menus', body);
+            location.href = '/admin/menus';
+        } catch (e) { api.flash(e.message, 'error'); }
+    });
+</script>
+</body>
+</html>
